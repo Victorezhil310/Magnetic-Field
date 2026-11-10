@@ -248,28 +248,37 @@ export class HandController {
     const extended = tip => this._dist(lm[tip], wrist) > this._dist(lm[tip - 2], wrist) * 1.12;
     const index = extended(8), middle = extended(12), ring = extended(16), pinky = extended(20);
     const thumb = this._dist(lm[4], lm[17]) > this._dist(lm[3], lm[17]) * 1.15;
+    const fingerCount = (index ? 1 : 0) + (middle ? 1 : 0) + (ring ? 1 : 0) + (pinky ? 1 : 0) + (thumb ? 1 : 0);
+
     const centerX = (lm[0].x + lm[9].x) / 2;
     const centerY = (lm[0].y + lm[9].y) / 2;
-    let name = 'unknown', label = 'Hand detected';
-    if (pinch < 0.38) { name = 'pinch'; label = 'Pinch · zoom'; }
-    else if (index && middle && ring && pinky) { name = 'palm'; label = 'Open palm · orbit'; }
-    else if (!index && !middle && !ring && !pinky && thumb && lm[4].y < wrist.y - 0.05) { name = 'thumbs-up'; label = 'Thumbs up · field lines'; }
-    else if (!index && !middle && !ring && !pinky) { name = 'fist'; label = 'Fist · pause / resume'; }
-    else if (index && middle && !ring && !pinky) { name = 'victory'; label = 'Victory · reset view'; }
-    else if (index && !middle && !ring && !pinky) { name = 'point'; label = 'Point · next specimen'; }
+    let name = 'unknown', label = 'Hand Detected';
+
+    if (pinch < 0.35 && middle && ring && pinky) { name = 'ok'; label = 'OK Sign 👌 · Capture Screenshot'; }
+    else if (pinch < 0.38) { name = 'pinch'; label = 'Pinch · Zoom Camera'; }
+    else if (index && pinky && !middle && !ring) { name = 'rock'; label = 'Rock Sign 🤘 · Explode View'; }
+    else if (index && middle && ring && !pinky) { name = 'three'; label = '3 Fingers · Iron Filings'; }
+    else if (index && middle && ring && pinky && thumb) { name = 'palm'; label = '5 Fingers · Orbit Camera'; }
+    else if (index && middle && ring && pinky && !thumb) { name = 'four'; label = '4 Fingers · Flux Heatmap'; }
+    else if (!index && !middle && !ring && !pinky && thumb && lm[4].y < wrist.y - 0.04) { name = 'thumbs-up'; label = 'Thumbs Up 👍 · Field Lines'; }
+    else if (!index && !middle && !ring && !pinky && thumb && lm[4].y > wrist.y + 0.04) { name = 'thumbs-down'; label = 'Thumbs Down 👎 · Flip Polarity'; }
+    else if (!index && !middle && !ring && !pinky) { name = 'fist'; label = 'Fist ✊ · Pause / Resume'; }
+    else if (index && middle && !ring && !pinky) { name = 'victory'; label = 'Victory ✌ · Reset View'; }
+    else if (index && !middle && !ring && !pinky) { name = 'point'; label = 'Point ☝ · Next Specimen'; }
+
     const dx = this.prevCenter ? centerX - this.prevCenter.x : 0;
     const dy = this.prevCenter ? centerY - this.prevCenter.y : 0;
     this.prevCenter = { x: centerX, y: centerY };
     const now = performance.now();
     let discrete = false;
-    if (['fist', 'victory', 'point', 'thumbs-up'].includes(name)) {
-      if (name !== this.lastGesture || now - this.lastDiscrete > 1400) {
+    if (['fist', 'victory', 'point', 'thumbs-up', 'thumbs-down', 'rock', 'three', 'four', 'ok'].includes(name)) {
+      if (name !== this.lastGesture || now - this.lastDiscrete > 1200) {
         discrete = true;
         this.lastDiscrete = now;
       }
     }
     this.lastGesture = name;
-    return { name, label, dx, dy, pinch, discrete, centerX, centerY };
+    return { name, label, dx, dy, pinch, discrete, fingerCount, centerX, centerY };
   }
 }
 

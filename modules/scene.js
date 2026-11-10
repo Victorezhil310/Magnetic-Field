@@ -767,6 +767,24 @@ export class MagneticScene {
       const spiral = this._addPart(group, new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(spiralPts), 360, 0.05, 8), metal(COLORS.copper, 0.25, 0.9)), [0, 0, 0]);
       spiral.userData.basePos = spiral.position.clone();
       group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'tokamak-fusion-ring') {
+      const torus = this._addPart(group, new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.9, 32, 64), glow(0xd96bff, 0.75)), [0, 1.2, 0]);
+      torus.rotation.x = Math.PI / 2; torus.position.y = 2.0; torus.userData.basePos = torus.position.clone();
+      for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2;
+        const coil = this._addPart(group, new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.12, 16, 32), metal(0x35e6ff, 0.2, 0.9)), [0, 0, 0]);
+        coil.position.set(Math.cos(angle) * 2.6, 2.0, Math.sin(angle) * 2.6);
+        coil.rotation.y = -angle;
+      }
+      group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'squid-quantum-sensor' || shape === 'superconducting') {
+      const loop = this._addPart(group, new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.15, 24, 64), glow(0x35e6ff, 0.9)), [0, 1, 0]);
+      loop.rotation.x = Math.PI / 2; loop.position.y = 1.8; loop.userData.basePos = loop.position.clone();
+      [-1, 1].forEach(side => {
+        const junction = this._addPart(group, new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), metal(COLORS.gold, 0.1, 1)), [side * 1.8, 0, 0]);
+        junction.position.set(side * 1.8, 1.8, 0); junction.userData.basePos = junction.position.clone();
+      });
+      group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
     } else {
       this._buildCoilInto(group, { length: p.length / 10 || 4, radius: (p.diameter / 20) || 0.9, turns: Math.min(40, Math.max(4, p.turns / 10)), core: p.core !== 'air' });
       if (shape === 'electromagnet') {

@@ -129,7 +129,9 @@ export const DEVICES = [
   { id: 'solenoid', name: 'Solenoid', shape: 'solenoid', description: 'A long helical coil whose interior field is nearly uniform.', physics: 'Ampere law gives B = mu0*n*I inside an ideal long solenoid.', formula: 'B_ideal = mu0 * (N/L) * I', applications: ['Actuators', 'Valves', 'Inductors'], defaults: { voltage: 12, current: 1.5, turns: 300, core: 'air', length: 80, diameter: 25, gap: 2 }, specs: ['Uniform interior field', 'Air-core avoids saturation'], references: ['hyper'], partsList: ['AWG 22 Magnet Wire', 'Acrylic Tube 25 mm OD', 'DC Power Supply 12V 2A'], assemblyGuide: 'Wind wire neatly in tight adjacent layers along acrylic tube length.', sourcingGuide: 'Electronics supply stores, Amazon, Digikey' },
   { id: 'tesla-coil', name: 'Resonant Tesla Coil Transformer', shape: 'tesla-coil', description: 'A resonant air-core high-frequency transformer producing high RF voltage.', physics: 'Energy transfers resonantly between primary and secondary tuned LC circuits.', formula: 'f0 = 1 / (2*pi*sqrt(L*C))', applications: ['High-voltage demonstrations', 'Wireless power research'], defaults: { voltage: 24, current: 5, turns: 800, core: 'air', length: 120, diameter: 40, gap: 5, resonantFrequency: 250, qualityFactor: 40 }, specs: ['Resonant air-core transformer', 'Lethal RF voltage hazard in real hardware'], references: ['wiki-tesla'], partsList: ['Secondary Winding AWG 34 (800 turns)', 'Primary Winding AWG 10 Copper Tubing (4 turns)', 'Top Load Aluminum Toroid', 'Solid State Inverter / Spark Gap Driver'], assemblyGuide: 'Tune primary tap location until primary resonant frequency matches secondary f0.', sourcingGuide: 'Eastern Voltage Research, OneTesla, DIY High Voltage' },
   { id: 'bifilar-resonator', name: 'Nikola Tesla Bifilar Resonator Coil', shape: 'copper-coil', description: 'Flat pancake bifilar coil with integrated high capacitance for wireless power transmission.', physics: 'Adjacent turns carry high voltage difference, storing up to 100x higher internal capacitive energy E_c = 1/2*C*V^2.', formula: 'E_total = 1/2*L*I^2 + 1/2*C*V^2', applications: ['Wireless Energy Grids', 'Resonant Induction Tanks'], defaults: { voltage: 36, current: 3, turns: 120, core: 'air', length: 10, diameter: 120, gap: 2 }, specs: ['Self-resonant flat pancake geometry', 'High energy density'], references: ['wiki-tesla'], partsList: ['AWG 18 Dual-Strand Enamel Wire', '120 mm Acrylic Base Plate', 'High Voltage RF Driver'], assemblyGuide: 'Connect end of Strand 1 to start of Strand 2 in series. Drive with high-frequency sine wave.', sourcingGuide: 'Custom Tesla coil builders, Lab Surplus' },
-  { id: 'mhd-thruster', name: 'Magneto-Hydrodynamic (MHD) Thruster', shape: 'solenoid', description: 'Electromagnetic fluid thruster driving conductive fluid/plasma using cross-field Lorentz force F = I*L x B.', physics: 'Direct electrical current passed through fluid in an axial magnetic field generates continuous Lorentz thrust without moving parts.', formula: 'F_thrust = I * L * B', applications: ['Submarine silent propulsion', 'Plasma space thrusters', 'Liquid metal pumps'], defaults: { voltage: 24, current: 8, turns: 1, core: 'air', length: 100, diameter: 30, gap: 5 }, specs: ['No moving mechanical parts', 'Direct electromagnetic fluid propulsion'], references: ['hyper'], partsList: ['Pair of Copper Electrodes', 'Channel Glass/Polycarbonate Tube', 'N52 Neodymium Field Magnets', 'Saltwater or Liquid Metal conductive fluid'], assemblyGuide: 'Position electrodes perpendicular to magnetic field lines along fluid channel.', sourcingGuide: 'DIY Plasma Lab, Scientific Supply' }
+  { id: 'mhd-thruster', name: 'Magneto-Hydrodynamic (MHD) Thruster', shape: 'solenoid', description: 'Electromagnetic fluid thruster driving conductive fluid/plasma using cross-field Lorentz force F = I*L x B.', physics: 'Direct electrical current passed through fluid in an axial magnetic field generates continuous Lorentz thrust without moving parts.', formula: 'F_thrust = I * L * B', applications: ['Submarine silent propulsion', 'Plasma space thrusters', 'Liquid metal pumps'], defaults: { voltage: 24, current: 8, turns: 1, core: 'air', length: 100, diameter: 30, gap: 5 }, specs: ['No moving mechanical parts', 'Direct electromagnetic fluid propulsion'], references: ['hyper'], partsList: ['Pair of Copper Electrodes', 'Channel Glass/Polycarbonate Tube', 'N52 Neodymium Field Magnets', 'Saltwater or Liquid Metal conductive fluid'], assemblyGuide: 'Position electrodes perpendicular to magnetic field lines along fluid channel.', sourcingGuide: 'DIY Plasma Lab, Scientific Supply' },
+  { id: 'tokamak-fusion-ring', name: 'Tokamak Toroidal Fusion Magnetic Cage', shape: 'solenoid', description: 'Toroidal superconducting magnetic cage for magnetic confinement fusion plasma.', physics: 'Helical magnetic field lines formed by toroidal and poloidal coils prevent 100M°C fusion plasma from touching reactor walls.', formula: 'B_toroidal = mu0 * N * I / (2 * pi * r); q = r * B_t / (R * B_p)', applications: ['ITER Confinement', 'Clean Nuclear Fusion Energy', 'Magneto-plasma Physics'], defaults: { voltage: 48, current: 15, turns: 500, core: 'air', length: 80, diameter: 100, gap: 2 }, specs: ['Superconducting magnetic bottle', '100 Million °C plasma confinement'], references: ['wiki-super'], partsList: ['REBCO High-Tc Superconducting Tape Coils', 'Inconel Vacuum Vessel', 'Cryogenic Liquid Helium Cooling Loop'], assemblyGuide: 'Wind D-shaped toroidal field coils symmetrically around central solenoid axis.', sourcingGuide: 'ITER Fusion Research, SuperPower Inc' },
+  { id: 'squid-quantum-sensor', name: 'SQUID Superconducting Quantum Magnetometer', shape: 'superconducting', description: 'Ultra-sensitive femto-Tesla magnetic field sensor using Josephson junction quantum interference.', physics: 'Quantized magnetic flux through a superconducting loop with Josephson junctions creates periodic quantum interference voltage modulation.', formula: 'Phi_0 = h / (2e) = 2.067 x 10^-15 Weber', applications: ['Magnetoencephalography (MEG Brain Scanning)', 'Geophysical Mineral Exploration', 'Gravitational Wave Detection'], defaults: { voltage: 5, current: 0.1, turns: 1, core: 'air', length: 20, diameter: 15, gap: 1 }, specs: ['Measures fields down to 10^-15 Tesla (fT)', 'Josephson junction quantum tunneling'], references: ['wiki-super'], partsList: ['Niobium Josephson Junctions', 'Cryogenic Liquid Helium Cryostat', 'Mu-Metal Shielded Enclosure'], assemblyGuide: 'Operate inside triple-layer Mu-Metal shield at 4.2 Kelvin.', sourcingGuide: 'Tristan Technologies, STAR Cryoelectronics' }
 ];
 
 export const EXPERIMENTS = [
@@ -194,6 +196,34 @@ export const CONCEPT_PROJECTS = [
     params: { gap: 25, strength: 180, density: 40, fieldLines: true, heatmap: true },
     physicsExplanation: 'Large pole surface area combined with high remanence Br = 1.48 T projects an intense flux density B, producing Maxwell holding pressure F = B^2*A / (2*mu0) exceeding 8.5 kN.',
     formula: 'F_pull = B^2 * A / (2*mu0); P_Maxwell = B^2 / (2*mu0) = 870 kPa'
+  },
+  {
+    id: 'concept-5',
+    number: 5,
+    title: 'Tokamak Toroidal Magnetic Fusion Plasma Cage',
+    category: 'QUANTUM & CRYOGENICS',
+    summary: 'ITER-style toroidal magnetic bottle confining 100,000,000 °C fusion plasma using superposed helical magnetic fields.',
+    setup: 'Toroidal and poloidal superconducting coils forming a closed magnetic surface.',
+    route: 'electro',
+    device: 'tokamak-fusion-ring',
+    deviceParams: { voltage: 48, current: 15, turns: 500, core: 'air', length: 80, diameter: 100, gap: 2 },
+    params: { strength: 180, fieldLines: true, heatmap: true },
+    physicsExplanation: 'Charged ions and electrons spiral around magnetic field lines with Larmor radius r_L = m*v / (q*B), preventing 100M°C plasma from touching reactor vessel walls.',
+    formula: 'r_Larmor = m*v_perp / (q*B); q_safety = r*B_toroidal / (R*B_poloidal)'
+  },
+  {
+    id: 'concept-6',
+    number: 6,
+    title: 'SQUID Superconducting Quantum Magnetometer',
+    category: 'QUANTUM & CRYOGENICS',
+    summary: 'Josephson junction quantum interferometer capable of detecting 10^-15 Tesla (femto-Tesla) magnetic brain activity.',
+    setup: 'Superconducting Nb loop with thin insulating barrier Josephson junctions.',
+    route: 'electro',
+    device: 'squid-quantum-sensor',
+    deviceParams: { voltage: 5, current: 0.1, turns: 1, core: 'air', length: 20, diameter: 15, gap: 1 },
+    params: { strength: 100, fieldLines: true, heatmap: true },
+    physicsExplanation: 'Quantized magnetic flux Phi_0 = h/(2e) through the superconducting loop creates macroscopic quantum interference, modulating tunnel current with extreme sensitivity.',
+    formula: 'Delta_Phi = h / (2e) = 2.0678 x 10^-15 Wb'
   }
 ];
 
