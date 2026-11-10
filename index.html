@@ -2,12 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#05080d" />
-  <meta name="description" content="Magnetic Universe 3D — an interactive laboratory for magnets, materials, fields and electromagnetic devices." />
-  <title>Magnetic Universe 3D · Virtual Science Laboratory</title>
+  <meta name="description" content="Magnetic Universe 3D — Real-time interactive laboratory for magnets, materials, field simulation, 1000+ concept projects, and engineering tools." />
+  <meta name="keywords" content="magnetic field 3d, electromagnetism lab, neodymium magnet, halbach array, maglev, tesla coil, physics simulation, vercel" />
+  <link rel="canonical" href="https://magnetic-field-ecru.vercel.app/" />
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://magnetic-field-ecru.vercel.app/" />
+  <meta property="og:title" content="Magnetic Universe 3D · Science & Engineering Lab" />
+  <meta property="og:description" content="Interactive 3D laboratory for magnets, metals, 1000+ concept permutations, shielding calculators, and electromagnetic devices." />
+  <meta property="og:image" content="https://magnetic-field-ecru.vercel.app/assets/logo.svg" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://magnetic-field-ecru.vercel.app/" />
+  <meta name="twitter:title" content="Magnetic Universe 3D Science Lab" />
+  <meta name="twitter:description" content="Simulate magnetic fields, materials, superconductors, and 1000+ concept projects in live 3D." />
+
+  <title>Magnetic Universe 3D · Science & Engineering Laboratory</title>
   <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
   <link rel="stylesheet" href="./style.css" />
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Magnetic Universe 3D",
+    "url": "https://magnetic-field-ecru.vercel.app/",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "description": "An interactive 3D magnetic science laboratory with real-time field calculation, 1000+ concept projects, material database, and physics tools.",
+    "author": {
+      "@type": "Person",
+      "name": "Victorezhil310"
+    }
+  }
+  </script>
+
   <script type="importmap">
   {
     "imports": {
@@ -35,20 +69,35 @@
         <button class="nav-item" data-route="field"><span data-icon="field"></span><span>Field Simulator</span><kbd>5</kbd></button>
         <button class="nav-item" data-route="electro"><span data-icon="bolt"></span><span>Electromagnetism</span><kbd>6</kbd></button>
         <button class="nav-item" data-route="experiments"><span data-icon="beaker"></span><span>Experiments</span><kbd>7</kbd></button>
+        <button class="nav-item" data-route="tools"><span data-icon="calculator"></span><span>Tools & Calculators</span><kbd>T</kbd></button>
+        <button class="nav-item" data-route="quiz"><span data-icon="check"></span><span>Physics Quiz</span><kbd>Q</kbd></button>
         <button class="nav-item" data-route="encyclopedia"><span data-icon="book"></span><span>Encyclopedia</span><kbd>8</kbd></button>
         <button class="nav-item" data-route="settings"><span data-icon="settings"></span><span>Settings</span><kbd>9</kbd></button>
       </nav>
+
+      <!-- Sidebar Ad / Sponsor Slot -->
+      <div class="ad-slot sidebar-ad">
+        <small class="ad-label">SPONSORED LAB TOOLS</small>
+        <div class="ad-container" id="sidebarAdContainer">
+          <span class="ad-placeholder">Lab Sponsored Content</span>
+        </div>
+      </div>
+
       <div class="sidebar-footer">
         <div class="system-card"><span class="status-dot"></span><div><strong>Lab systems online</strong><small id="rendererStatus">Initializing WebGL…</small></div></div>
         <button class="help-link" id="helpBtn"><span data-icon="info"></span> Controls & shortcuts</button>
-        <div class="version">MAGNETIC UNIVERSE <span>v1.0.0</span></div>
+        <div class="legal-links">
+          <button data-route="privacy">Privacy Policy</button> · <button data-route="terms">Terms of Service</button>
+        </div>
+        <div class="version">MAGNETIC UNIVERSE <span>v1.2.0</span></div>
       </div>
     </aside>
+
     <div class="main-shell">
       <header class="topbar">
         <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open navigation"><span data-icon="menu"></span></button>
         <div class="breadcrumb"><span>LABORATORY</span><span data-icon="chevron"></span><strong id="breadcrumbCurrent">Overview</strong></div>
-        <button class="search-trigger" id="searchBtn"><span data-icon="search"></span><span>Search magnets, materials, physics…</span><kbd>/</kbd></button>
+        <button class="search-trigger" id="searchBtn"><span data-icon="search"></span><span>Search magnets, materials, physics, tools…</span><kbd>/</kbd></button>
         <div class="topbar-actions">
           <button class="agent-btn" id="voiceBtn" aria-pressed="false"><span data-icon="mic"></span><span>Voice agent</span><i class="agent-dot"></i></button>
           <button class="icon-btn" id="gestureBtn" aria-label="Hand gesture control" aria-pressed="false"><span data-icon="hand"></span></button>
@@ -61,8 +110,8 @@
 
   <section class="agent-panel" id="agentPanel" aria-label="Voice agent" hidden>
     <div class="agent-panel-head"><div class="agent-orb"><span data-icon="wave"></span></div><div><strong>Lab Assistant</strong><small id="agentStatus">Ready · text or voice</small></div><button class="icon-btn" id="closeAgent" aria-label="Close voice agent"><span data-icon="close"></span></button></div>
-    <div class="agent-transcript" id="agentTranscript" aria-live="polite"><p class="agent-message">Say “show the magnetic field”, “select horseshoe”, or “set strength to 150”. You can also type a command below.</p></div>
-    <div class="command-chips"><button data-command="show field lines">Show field</button><button data-command="iron filings">Iron filings</button><button data-command="explode">Explode</button><button data-command="reset">Reset</button><button data-command="next magnet">Next magnet</button></div>
+    <div class="agent-transcript" id="agentTranscript" aria-live="polite"><p class="agent-message">Say “show the magnetic field”, “open calculator”, “quiz”, or “concept 5”. You can also type a command below.</p></div>
+    <div class="command-chips"><button data-command="show field lines">Show field</button><button data-command="open calculator">Calculators</button><button data-command="quiz">Quiz</button><button data-command="concept 1">Halbach concept</button><button data-command="reset">Reset</button></div>
     <form class="agent-input" id="agentForm"><input id="agentCommand" type="text" placeholder="Type a lab command…" autocomplete="off" aria-label="Lab command" /><button class="icon-btn" type="submit" aria-label="Run command"><span data-icon="arrow"></span></button></form>
     <div class="agent-panel-foot"><button class="primary-btn small" id="listenBtn"><span data-icon="mic"></span> Start listening</button><span id="voiceSupport">Speech recognition checked on start</span></div>
   </section>
@@ -79,10 +128,12 @@
     <div class="command-search"><span data-icon="search"></span><input id="commandSearch" type="search" placeholder="Search the laboratory…" aria-label="Search the laboratory" /><kbd>ESC</kbd></div>
     <div class="command-results" id="commandResults"></div>
   </dialog>
+
   <dialog id="infoDialog" class="info-dialog"><div class="info-dialog-head"><h2 id="infoTitle">References</h2><button class="icon-btn" id="closeInfo" aria-label="Close dialog"><span data-icon="close"></span></button></div><div id="infoBody" class="info-body"></div></dialog>
   <div class="toast-region" id="toastRegion" aria-live="polite"></div>
   <input type="file" id="importSettings" accept="application/json" hidden />
-  <noscript><div class="noscript">Magnetic Universe requires JavaScript and WebGL. Please enable JavaScript to run the laboratory.</div></noscript>
+  <noscript><div class="noscript">Magnetic Universe 3D requires JavaScript and WebGL. Please enable JavaScript to run the laboratory.</div></noscript>
+
   <script src="./assets/vendor/chart.umd.js"></script>
   <script type="module" src="./app.js"></script>
 </body>

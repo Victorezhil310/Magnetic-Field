@@ -1,9 +1,13 @@
 import { MAGNETS, MATERIALS, DEVICES, EXPERIMENTS, ENCYCLOPEDIA, REFERENCES, THICKNESSES, CONCEPT_PROJECTS, getConceptCombination } from './modules/data.js';
+import { CALCULATORS, QUIZ_QUESTIONS, recommendMagnet } from './modules/tools.js';
+import { firebaseManager } from './modules/firebase.js';
 import * as Physics from './modules/physics.js';
 import { MagneticScene } from './modules/scene.js';
 import { VoiceAgent, HandController, LabAudio } from './modules/input.js';
 import * as Charts from './modules/charts.js';
 import { icon, hydrateIcons, esc, toast, openInfo, download, debounce, bindRanges, referenceHtml, specRows, tags } from './modules/ui.js';
+
+firebaseManager.init();
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
@@ -17,8 +21,12 @@ const ROUTES = {
   field: { title: 'Field Simulator', crumb: 'Field Simulator' },
   electro: { title: 'Electromagnetism', crumb: 'Electromagnetism' },
   experiments: { title: 'Experiments', crumb: 'Experiments' },
+  tools: { title: 'Tools & Calculators', crumb: 'Physics Tools & Engineering Calculators' },
+  quiz: { title: 'Physics Quiz Trainer', crumb: 'Interactive Knowledge Trainer' },
   encyclopedia: { title: 'Scientific Encyclopedia', crumb: 'Encyclopedia' },
-  settings: { title: 'Settings', crumb: 'Settings' }
+  settings: { title: 'Settings', crumb: 'Settings' },
+  privacy: { title: 'Privacy Policy', crumb: 'Privacy Policy' },
+  terms: { title: 'Terms of Service', crumb: 'Terms of Service' }
 };
 const LAB_ROUTES = ['home', 'concepts', 'magnets', 'materials', 'alloy', 'field', 'electro', 'experiments'];
 
@@ -39,6 +47,13 @@ const state = {
   conceptScrubberIndex: 1,
   conceptFilter: 'all',
   conceptQuery: '',
+  quizIndex: 0,
+  quizScore: 0,
+  quizAnswered: false,
+  quizSelectedOption: null,
+  wizardMaxTemp: 100,
+  wizardMinBr: 1.0,
+  wizardCorrosion: true,
   infoTab: 'overview',
   materialFilter: 'all',
   materialQuery: '',
@@ -187,6 +202,7 @@ function navigate(route, opts = {}) {
   if (opts.article) state.articleId = opts.article;
   if (opts.concept) { loadConcept(opts.concept); }
   if (location.hash !== `#${route}`) history.replaceState(null, '', `#${route}`);
+  firebaseManager.logEvent('page_view', { page_path: route });
   render();
   $('#sidebar')?.classList.remove('open');
   main.focus({ preventScroll: true });
@@ -453,8 +469,8 @@ function experimentTeaser() {
 function discoveryCards() {
   return `<div class="discovery-grid">
     <button class="discovery-card" data-route="concepts">${icon('spark')}<h3>1000+ Concept Projects</h3><p>Explore Halbach arrays, Curie engines, Railguns, Quantum levitation, and scrub through 1000+ concept permutations.</p><span class="card-link">Open Concept Matrix ${icon('arrow')}</span></button>
-    <button class="discovery-card" data-route="magnets">${icon('magnet')}<h3>Eighteen magnet families</h3><p>From N52 neodymium blocks to superconducting YBCO pellets and Halbach arrays — inspect every specimen.</p><span class="card-link">Open Magnet Explorer ${icon('arrow')}</span></button>
-    <button class="discovery-card" data-route="materials">${icon('layers')}<h3>30+ Material Database</h3><p>Mu-Metal, Permendur, Supermalloy, Pyrolytic Graphite, Bismuth and Stainless steel microstructures.</p><span class="card-link">Open Materials Database ${icon('arrow')}</span></button>
+    <button class="discovery-card" data-route="tools">${icon('calculator')}<h3>Engineering Tools</h3><p>Interactive Biot-Savart, Maxwell Stress, Lorentz Deflection, and Magnet Selection Wizard for makers.</p><span class="card-link">Open Tools & Calculators ${icon('arrow')}</span></button>
+    <button class="discovery-card" data-route="quiz">${icon('check')}<h3>Physics Quiz Trainer</h3><p>Test your knowledge on magnetic domains, Lenz Law, Curie temperatures, and shielding effectiveness.</p><span class="card-link">Start Knowledge Quiz ${icon('arrow')}</span></button>
   </div>`;
 }
 
@@ -532,6 +548,148 @@ function renderConcepts() {
       </article>
     `).join('')}
   </div>`;
+}
+
+function renderTools() {
+  const wizardRecs = recommendMagnet({
+    maxTemp: state.wizardMaxTemp,
+    minBr: state.wizardMinBr,
+    corrosionRisk: state.wizardCorrosion
+  }).slice(0, 4);
+
+  return `<section class="page-heading">
+    <div>
+      <div class="eyebrow">PHYSICS & ENGINEERING CALCULATORS</div>
+      <h1>Tools & <span class="accent">Calculators</span></h1>
+      <p>Interactive student physics calculators, magnet selection wizards, coil winder thermal tools, and shielding effectiveness estimators.</p>
+    </div>
+  </section>
+
+  <div class="tool-grid">
+    ${CALCULATORS.map(calc => {
+      const defaultVals = calc.inputs.map(i => i.default);
+      const res = calc.calculate(...defaultVals);
+      return `
+        <article class="tool-card" id="calc-card-${calc.id}">
+          <h3>${icon('calculator')} ${esc(calc.name)}</h3>
+          <p>${esc(calc.description)}</p>
+          <div class="calc-inputs">
+            ${calc.inputs.map(inp => {
+              if (inp.type === 'select') {
+                return `<div class="control-group"><label>${esc(inp.label)}</label>
+                  <select class="calc-field" data-calc="${calc.id}" data-input="${inp.id}">${inp.options.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></div>`;
+              }
+              return `<div class="control-group"><label>${esc(inp.label)}: <output id="out-${inp.id}">${inp.default}</output></label>
+                <input type="range" class="calc-field" data-calc="${calc.id}" data-input="${inp.id}" min="${inp.min}" max="${inp.max}" step="${inp.step}" value="${inp.default}" /></div>`;
+            }).join('')}
+          </div>
+          <div class="calc-result" id="res-${calc.id}">${esc(res.text)}</div>
+        </article>
+      `;
+    }).join('')}
+
+    <!-- Magnet Selection Wizard -->
+    <article class="tool-card" style="grid-column:1/-1">
+      <h3>${icon('spark')} Magnet Selection Wizard for Engineers & Makers</h3>
+      <p>Select your operating conditions to receive ranked magnet recommendations with temperature and corrosion warnings.</p>
+      <div class="workspace-grid" style="grid-template-columns:300px 1fr;gap:20px;margin-top:12px">
+        <div class="control-body">
+          ${slider('wiz-temp', 'Operating Temp (°C)', 20, 500, 10, state.wizardMaxTemp, ' °C')}
+          ${slider('wiz-br', 'Min Remanence Br (T)', 0.2, 1.5, 0.1, state.wizardMinBr, ' T')}
+          ${toggle('wiz-corrosion', 'Humid/Corrosive Environment', 'shield', state.wizardCorrosion, 'corrosion')}
+        </div>
+        <div class="spec-table">
+          ${wizardRecs.map((r, i) => `
+            <div class="spec-row" style="padding:12px;background:var(--surface-2);margin-bottom:8px;border-radius:10px">
+              <div>
+                <strong style="font-size:14px;color:var(--text)">#${i + 1} ${esc(r.magnet.name)}</strong>
+                <p style="font-size:11px;color:var(--cool);margin:4px 0">${esc(r.magnet.strength)}</p>
+                ${r.reasons.length ? `<small style="color:var(--amber)">⚠️ ${r.reasons.join(' ')}</small>` : '<small style="color:var(--success)">✓ Excellent match</small>'}
+              </div>
+              <span class="badge-accent" style="font-size:12px;color:var(--cyan)">Score ${r.score}%</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </article>
+  </div>`;
+}
+
+function renderQuiz() {
+  const q = QUIZ_QUESTIONS[state.quizIndex] || QUIZ_QUESTIONS[0];
+  const isFinished = state.quizIndex >= QUIZ_QUESTIONS.length;
+
+  if (isFinished) {
+    return `<section class="page-heading"><div><div class="eyebrow">QUIZ COMPLETE</div><h1>Knowledge Trainer <span class="accent">Results</span></h1></div></section>
+      <div class="quiz-card" style="text-align:center">
+        <h2>🎉 Quiz Completed!</h2>
+        <p style="font-size:18px;color:var(--cyan)">Your Final Score: <strong>${state.quizScore} / ${QUIZ_QUESTIONS.length}</strong> (${Math.round((state.quizScore / QUIZ_QUESTIONS.length) * 100)}%)</p>
+        <div class="heading-actions" style="justify-content:center;margin-top:20px">
+          <button class="primary-btn" id="restartQuizBtn">${icon('reset')} Restart Quiz</button>
+          <button class="ghost-btn" data-route="encyclopedia">${icon('book')} Read Physics Encyclopedia</button>
+        </div>
+      </div>`;
+  }
+
+  return `<section class="page-heading">
+    <div>
+      <div class="eyebrow">INTERACTIVE KNOWLEDGE TRAINER</div>
+      <h1>Physics <span class="accent">Quiz</span></h1>
+      <p>Test your understanding of magnetic domains, Curie temperature, eddy currents, and Maxwell stress.</p>
+    </div>
+  </section>
+
+  <div class="quiz-card">
+    <div class="quiz-header">
+      <span class="badge-accent">QUESTION ${state.quizIndex + 1} OF ${QUIZ_QUESTIONS.length}</span>
+      <span class="badge-accent" style="color:var(--amber)">Score: ${state.quizScore}</span>
+    </div>
+    <div class="quiz-question">${esc(q.question)}</div>
+    <div class="quiz-options">
+      ${q.options.map((opt, i) => {
+        let cls = '';
+        if (state.quizAnswered) {
+          if (i === q.correct) cls = 'correct';
+          else if (i === state.quizSelectedOption) cls = 'wrong';
+        }
+        return `<button class="quiz-option ${cls}" data-quiz-option="${i}"><b>${String.fromCharCode(65 + i)}.</b> ${esc(opt)}</button>`;
+      }).join('')}
+    </div>
+    ${state.quizAnswered ? `
+      <div class="quiz-explanation">
+        <strong>${state.quizSelectedOption === q.correct ? '✓ Correct!' : '❌ Incorrect.'}</strong> ${esc(q.explanation)}
+      </div>
+      <button class="primary-btn" id="nextQuizBtn" style="margin-top:10px">${icon('arrow')} Next Question</button>
+    ` : ''}
+  </div>`;
+}
+
+function renderPrivacy() {
+  return `<section class="page-heading"><div><div class="eyebrow">LEGAL DOCUMENTATION</div><h1>Privacy Policy</h1><p>Official privacy policy for https://magnetic-field-ecru.vercel.app/</p></div></section>
+  <article class="legal-article">
+    <h2>1. Overview</h2>
+    <p>Magnetic Universe 3D (hosted at https://magnetic-field-ecru.vercel.app/) respects your privacy. This application operates primarily client-side in your browser.</p>
+    <h2>2. Camera & Hand Gesture Processing</h2>
+    <p>When you enable Hand Gesture Control, camera frames are processed 100% locally in your browser memory using MediaPipe Hand Landmarker. No video, camera images, or biometric data are ever stored, uploaded, or transmitted to external servers.</p>
+    <h2>3. Speech & Voice Agent</h2>
+    <p>Voice recognition utilizes your browser's native Web Speech API. Audio is processed locally or via your device's operating system speech provider.</p>
+    <h2>4. Analytics & Monitization</h2>
+    <p>We use Firebase Analytics and compliant AdMob/AdSense banner placeholders to evaluate lab performance and support hosting costs. Non-personally identifiable usage statistics (e.g. page views) may be logged.</p>
+    <h2>5. Local Storage</h2>
+    <p>Your lab settings, audio preferences, and saved workspace configurations are saved locally on your device in HTML5 localStorage.</p>
+  </article>`;
+}
+
+function renderTerms() {
+  return `<section class="page-heading"><div><div class="eyebrow">LEGAL DOCUMENTATION</div><h1>Terms of Service</h1><p>Terms of service and safety disclaimers for https://magnetic-field-ecru.vercel.app/</p></div></section>
+  <article class="legal-article">
+    <h2>1. Simulation & Educational Disclaimer</h2>
+    <p>Magnetic Universe 3D is an educational and research simulation tool. All magnetic field strength values, force estimates, and skin-depth calculations are model approximations and do not constitute calibrated hardware guarantees.</p>
+    <h2>2. Safety Disclaimers</h2>
+    <p>Real neodymium magnets present pinch hazards and can shatter. Real high-voltage Tesla coils produce lethal RF voltages, ozone, and UV radiation. Never operate real high-voltage or powerful magnetic hardware without qualified supervision.</p>
+    <h2>3. Acceptable Use</h2>
+    <p>You may use this application for personal, educational, research, and non-commercial learning. Modification or redistribution of underlying source code is subject to repository licensing terms.</p>
+  </article>`;
 }
 
 function renderMagnets() {
@@ -722,7 +880,7 @@ function render() {
   const bc = $('#breadcrumbCurrent');
   if (bc) bc.textContent = ROUTES[r]?.crumb || 'Overview';
   document.title = `${ROUTES[r]?.title || 'Overview'} · Magnetic Universe 3D`;
-  const renderers = { home: renderHome, concepts: renderConcepts, magnets: renderMagnets, materials: renderMaterials, alloy: renderAlloy, field: renderField, electro: renderElectro, experiments: renderExperiments, encyclopedia: renderEncyclopedia, settings: renderSettings };
+  const renderers = { home: renderHome, concepts: renderConcepts, magnets: renderMagnets, materials: renderMaterials, alloy: renderAlloy, field: renderField, electro: renderElectro, experiments: renderExperiments, tools: renderTools, quiz: renderQuiz, encyclopedia: renderEncyclopedia, settings: renderSettings, privacy: renderPrivacy, terms: renderTerms };
   const renderer = renderers[r] || renderHome;
   main.innerHTML = renderer();
   hydrateIcons(main);
@@ -921,6 +1079,49 @@ function bindPageEvents() {
     render();
   });
 
+  // Calculator inputs listener
+  main.querySelectorAll('.calc-field').forEach(field => {
+    field.addEventListener('input', () => {
+      const calcId = field.dataset.calc;
+      const calcObj = CALCULATORS.find(c => c.id === calcId);
+      if (!calcObj) return;
+      const values = calcObj.inputs.map(inp => {
+        const el = main.querySelector(`[data-calc="${calcId}"][data-input="${inp.id}"]`);
+        const out = $(`#out-${inp.id}`);
+        if (out) out.textContent = el ? el.value : inp.default;
+        return el ? (inp.type === 'select' ? el.value : Number(el.value)) : inp.default;
+      });
+      const res = calcObj.calculate(...values);
+      const resEl = $(`#res-${calcId}`);
+      if (resEl) resEl.textContent = res.text;
+    });
+  });
+
+  // Quiz events
+  main.querySelectorAll('[data-quiz-option]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (state.quizAnswered) return;
+      state.quizAnswered = true;
+      state.quizSelectedOption = Number(btn.dataset.quizOption);
+      const q = QUIZ_QUESTIONS[state.quizIndex];
+      if (state.quizSelectedOption === q.correct) state.quizScore++;
+      render();
+    });
+  });
+  $('#nextQuizBtn')?.addEventListener('click', () => {
+    state.quizIndex++;
+    state.quizAnswered = false;
+    state.quizSelectedOption = null;
+    render();
+  });
+  $('#restartQuizBtn')?.addEventListener('click', () => {
+    state.quizIndex = 0;
+    state.quizScore = 0;
+    state.quizAnswered = false;
+    state.quizSelectedOption = null;
+    render();
+  });
+
   main.querySelectorAll('[data-param]').forEach(el => {
     const handler = () => {
       const key = el.dataset.param;
@@ -1001,7 +1202,7 @@ function captureViewport() {
 
 function exportWorkspace() {
   download('magnetic-universe-workspace.json', JSON.stringify({
-    version: '1.0.0', exported: new Date().toISOString(), route: state.route,
+    version: '1.2.0', exported: new Date().toISOString(), route: state.route,
     magnet: currentMagnet()?.id, material: currentMaterial()?.id, device: currentDevice()?.id,
     params: state.params, deviceParams: state.deviceParams, alloy: state.alloy, settings: state.settings,
     note: 'Simulation estimates; see MODEL_NOTES in modules/physics.js'
@@ -1043,7 +1244,7 @@ function runCommand(raw) {
   const num = text.match(/(-?\d+(?:\.\d+)?)/);
   const value = num ? Number(num[1]) : null;
 
-  const navMap = { home: 'home', overview: 'home', concepts: 'concepts', 'concept projects': 'concepts', magnet: 'magnets', 'magnet explorer': 'magnets', material: 'materials', materials: 'materials', alloy: 'alloy', 'alloy laboratory': 'alloy', field: 'field', 'field simulator': 'field', 'magnetic field simulator': 'field', electromagnet: 'electro', electromagnetism: 'electro', 'electromagnetism lab': 'electro', tesla: 'electro', 'tesla coil': 'electro', experiment: 'experiments', experiments: 'experiments', encyclopedia: 'encyclopedia', 'scientific encyclopedia': 'encyclopedia', settings: 'settings' };
+  const navMap = { home: 'home', overview: 'home', concepts: 'concepts', 'concept projects': 'concepts', magnet: 'magnets', 'magnet explorer': 'magnets', material: 'materials', materials: 'materials', alloy: 'alloy', 'alloy laboratory': 'alloy', field: 'field', 'field simulator': 'field', 'magnetic field simulator': 'field', electromagnet: 'electro', electromagnetism: 'electro', 'electromagnetism lab': 'electro', tesla: 'electro', 'tesla coil': 'electro', experiment: 'experiments', experiments: 'experiments', tools: 'tools', calculator: 'tools', calculators: 'tools', quiz: 'quiz', encyclopedia: 'encyclopedia', 'scientific encyclopedia': 'encyclopedia', settings: 'settings', privacy: 'privacy', terms: 'terms' };
   const navPhrase = text.replace(/^(?:please\s+)?(?:go to|go|open|show|navigate to|switch to|take me to)\s+/, '').replace(/^the\s+/, '').replace(/\s+(?:page|lab|database|simulator|please)$/, '').trim();
   const navRoute = navMap[navPhrase];
 
@@ -1070,38 +1271,18 @@ function runCommand(raw) {
     const v = Physics.clamp(value, 10, 200); setParam('strength', v); syncControls(); response = `Magnetic strength set to ${v} percent.`;
   } else if (/(?:set\s+)?(?:gap|distance)|(?:gap|distance)\s+(?:to\s+)?\d/.test(text) && value != null && !/field lines/.test(text)) {
     const v = Physics.clamp(value, 5, 120); setParam('gap', v); syncControls(); response = `Pole-face gap set to ${v} millimetres.`;
-  } else if (/turns/.test(text) && value != null) {
-    state.deviceParams.turns = Physics.clamp(Math.round(value), 10, 1000); scene.update({ turns: state.deviceParams.turns }); syncControls(); updateReadouts(); rebuildChart(); response = `Coil turns set to ${state.deviceParams.turns}.`;
-  } else if (/current/.test(text) && value != null) {
-    state.deviceParams.current = Physics.clamp(value, 0, 10); scene.update({ current: state.deviceParams.current }); syncControls(); updateReadouts(); rebuildChart(); response = `Current set to ${state.deviceParams.current} amperes.`;
-  } else if (/voltage/.test(text) && value != null) {
-    state.deviceParams.voltage = Physics.clamp(value, 0, 50); scene.update({ voltage: state.deviceParams.voltage }); syncControls(); updateReadouts(); response = `Voltage set to ${state.deviceParams.voltage} volts.`;
-  } else if (/temperature/.test(text) && value != null) {
-    const v = Physics.clamp(value, -20, 400); setParam('temperature', v); syncControls(); response = `Temperature set to ${v} degrees Celsius. Watch the remanence estimate.`;
   } else if (/iron filings/.test(text)) {
     const on = !/off|hide|disable/.test(text); setParam('filings', on); syncControls(); response = `Iron filings ${on ? 'enabled' : 'hidden'}.`;
   } else if (/heatmap|flux map/.test(text)) {
     const on = !/off|hide|disable/.test(text); setParam('heatmap', on); syncControls(); response = `Flux heatmap ${on ? 'enabled' : 'hidden'}.`;
   } else if (/field lines|show field| magnetic field/.test(text)) {
     const on = !/off|hide|disable/.test(text); setParam('fieldLines', on); syncControls(); response = `Field lines ${on ? 'visible' : 'hidden'}.`;
-  } else if (/explod/.test(text)) {
-    setParam('displayMode', 'exploded'); syncControls(); response = 'Exploded view enabled.';
-  } else if (/cross.?section|cut away/.test(text)) {
-    setParam('displayMode', 'cross-section'); syncControls(); response = 'Cross-section enabled.';
-  } else if (/wireframe/.test(text)) {
-    setParam('displayMode', 'wireframe'); syncControls(); response = 'Wireframe mode enabled.';
-  } else if (/solid|normal view/.test(text)) {
-    setParam('displayMode', 'solid'); syncControls(); response = 'Solid PBR view restored.';
-  } else if (/pause|freeze/.test(text)) {
-    setParam('paused', true); response = 'Simulation paused.';
-  } else if (/resume|play|unpause/.test(text)) {
-    setParam('paused', false); response = 'Simulation resumed.';
   } else if (/reset/.test(text)) {
     resetLab(); response = 'Workspace reset to defaults.';
   } else if (/help|commands/.test(text)) {
     openInfo('Voice & text commands', helpHtml()); response = 'Here are the available commands.';
   } else {
-    response = 'Command accepted. Try "concept 5", "show field lines", "select horseshoe", or "reset".';
+    response = 'Command accepted. Try "concept 5", "open calculator", "quiz", or "reset".';
   }
   addAgentMessage(response);
   if (state.settings.speakResponses && state.settings.audio) voice.speak(response);
@@ -1109,12 +1290,13 @@ function runCommand(raw) {
 }
 
 function helpHtml() {
-  return `<h3>Keyboard</h3><ul><li><kbd>/</kbd> search · <kbd>V</kbd> voice agent · <kbd>G</kbd> hand control · <kbd>M</kbd> mute</li><li><kbd>R</kbd> reset · <kbd>Space</kbd> pause/resume · <kbd>0</kbd>–<kbd>9</kbd> switch pages</li><li>Drag to orbit · wheel/pinch to zoom · right-drag to pan</li></ul><h3>Voice / text commands</h3><ul><li>“open concepts”, “concept 5”, “concept 100”, “open field simulator”</li><li>“select horseshoe”, “next magnet”, “load copper”</li><li>“set strength to 150”, “set gap to 30”, “set turns to 400”</li><li>“show field lines”, “iron filings on”, “heatmap”, “explode”, “reset”</li></ul>`;
+  return `<h3>Keyboard</h3><ul><li><kbd>/</kbd> search · <kbd>V</kbd> voice agent · <kbd>G</kbd> hand control · <kbd>M</kbd> mute</li><li><kbd>R</kbd> reset · <kbd>Space</kbd> pause/resume · <kbd>T</kbd> tools · <kbd>Q</kbd> quiz · <kbd>0</kbd>–<kbd>9</kbd> switch pages</li></ul><h3>Voice / text commands</h3><ul><li>“open concepts”, “concept 5”, “open calculator”, “quiz”, “privacy”</li><li>“select horseshoe”, “next magnet”, “load copper”</li><li>“show field lines”, “iron filings on”, “heatmap”, “explode”, “reset”</li></ul>`;
 }
 
 function buildSearchIndex() {
   const items = [];
   CONCEPT_PROJECTS.forEach(c => items.push({ type: 'CONCEPT', title: c.title, sub: `Concept #${c.number} · ${c.category}`, icon: 'spark', action: () => { loadConcept(c.number); navigate('concepts', { concept: c.number }); } }));
+  CALCULATORS.forEach(c => items.push({ type: 'TOOL', title: c.name, sub: c.category, icon: 'calculator', action: () => navigate('tools') }));
   MAGNETS.forEach(m => items.push({ type: 'MAGNET', title: m.name, sub: m.family || m.material, icon: 'magnet', action: () => navigate('magnets', { magnet: m.id }) }));
   MATERIALS.forEach(m => items.push({ type: 'MATERIAL', title: m.name, sub: m.category, icon: 'layers', action: () => navigate('materials', { material: m.id }) }));
   DEVICES.forEach(d => items.push({ type: 'DEVICE', title: d.name, sub: d.shape, icon: 'bolt', action: () => navigate('electro', { device: d.id }) }));
@@ -1132,7 +1314,7 @@ function renderSearch(query = '') {
   searchSelected = Math.min(searchSelected, Math.max(0, results.length - 1));
   const cr = $('#commandResults');
   if (cr) {
-    cr.innerHTML = results.length ? results.map((r, i) => `<button class="command-result ${i === searchSelected ? 'selected' : ''}" data-result="${i}">${icon(r.icon)}<div><strong>${esc(r.title)}</strong><small>${esc(r.sub || '')}</small></div><span class="result-type">${r.type}</span></button>`).join('') : '<div class="command-empty">No matches. Try “concept 5”, “Halbach”, “Railgun”, “neodymium”, or “field”.</div>';
+    cr.innerHTML = results.length ? results.map((r, i) => `<button class="command-result ${i === searchSelected ? 'selected' : ''}" data-result="${i}">${icon(r.icon)}<div><strong>${esc(r.title)}</strong><small>${esc(r.sub || '')}</small></div><span class="result-type">${r.type}</span></button>`).join('') : '<div class="command-empty">No matches. Try “concept 5”, “Halbach”, “Railgun”, “calculator”, or “quiz”.</div>';
     cr.querySelectorAll('[data-result]').forEach(el => el.addEventListener('click', () => { results[Number(el.dataset.result)].action(); $('#commandDialog')?.close(); }));
   }
   return results;
@@ -1283,6 +1465,8 @@ function bindGlobalEvents() {
     else if (e.key.toLowerCase() === 'g') $('#gestureBtn')?.click();
     else if (e.key.toLowerCase() === 'm') $('#audioBtn')?.click();
     else if (e.key.toLowerCase() === 'r') resetLab();
+    else if (e.key.toLowerCase() === 't') navigate('tools');
+    else if (e.key.toLowerCase() === 'q') navigate('quiz');
     else if (e.key === ' ') { e.preventDefault(); setParam('paused', !state.params.paused); }
     else if (e.key === '0') navigate('concepts');
     else if (/^[1-9]$/.test(e.key)) {

@@ -362,6 +362,7 @@ test('MODEL_NOTES documents every model', () => {
 });
 
 import { getConceptCombination } from '../modules/data.js';
+import { CALCULATORS, QUIZ_QUESTIONS, recommendMagnet } from '../modules/tools.js';
 
 test('getConceptCombination produces valid physical parameters for 1000+ permutations', () => {
   for (let i = 1; i <= 1000; i += 1) {
@@ -372,4 +373,35 @@ test('getConceptCombination produces valid physical parameters for 1000+ permuta
     assert.ok(Number.isFinite(concept.params.strength), `concept ${i} strength finite`);
     assert.ok(Number.isFinite(concept.params.gap), `concept ${i} gap finite`);
   }
+});
+
+test('CALCULATORS calculate correct physics outputs', () => {
+  const biot = CALCULATORS.find(c => c.id === 'biot-savart');
+  const biotRes = biot.calculate(2, 100, 25, 10);
+  assert.ok(biotRes.fieldT > 0);
+  assert.ok(biotRes.formattedB.length > 0);
+
+  const maxwell = CALCULATORS.find(c => c.id === 'maxwell-pressure');
+  const maxRes = maxwell.calculate(1.2, 10, 0);
+  assert.ok(Number(maxRes.forceN) > 0);
+
+  const lorentz = CALCULATORS.find(c => c.id === 'lorentz-deflection');
+  const lorRes = lorentz.calculate('electron', 5, 0.5);
+  assert.ok(lorRes.radiusM > 0);
+
+  const winder = CALCULATORS.find(c => c.id === 'coil-winding');
+  const winRes = winder.calculate(400, 30, '22', 2.0);
+  assert.ok(Number(winRes.resistanceOhms) > 0);
+});
+
+test('QUIZ_QUESTIONS and recommendMagnet operate cleanly', () => {
+  assert.ok(QUIZ_QUESTIONS.length >= 8);
+  for (const q of QUIZ_QUESTIONS) {
+    assert.ok(q.question && q.options.length === 4);
+    assert.ok(q.correct >= 0 && q.correct < 4);
+  }
+
+  const recs = recommendMagnet({ maxTemp: 100, minBr: 1.0, corrosionRisk: true });
+  assert.ok(recs.length > 0);
+  assert.ok(recs[0].score >= 0);
 });

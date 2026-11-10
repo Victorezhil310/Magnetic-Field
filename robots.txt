@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://magnetic-field-ecru.vercel.app/sitemap.xml

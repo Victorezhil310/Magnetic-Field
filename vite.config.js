@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { cpSync } from 'node:fs';
+import { cpSync, existsSync } from 'node:fs';
 
 export default defineConfig({
   base: './',
@@ -12,7 +12,9 @@ export default defineConfig({
   plugins: [{
     name: 'copy-laboratory-assets',
     closeBundle() {
-      cpSync('assets', 'dist/assets', { recursive: true });
+      if (existsSync('assets')) cpSync('assets', 'dist/assets', { recursive: true });
+      if (existsSync('sitemap.xml')) cpSync('sitemap.xml', 'dist/sitemap.xml');
+      if (existsSync('robots.txt')) cpSync('robots.txt', 'dist/robots.txt');
     }
   }]
 });
