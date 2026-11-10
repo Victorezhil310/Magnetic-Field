@@ -136,21 +136,29 @@ export class HandController {
       await this.video.play();
       this.canvas.width = this.video.videoWidth || 640;
       this.canvas.height = this.video.videoHeight || 480;
-      this.onStatus?.('loading', 'Loading hand landmark model…');
-      const wasmBase = new URL(/* @vite-ignore */ '../assets/vendor/mediapipe/wasm', import.meta.url).href;
+      this.onStatus?.('loading', 'Connecting hand landmark scanner…');
+      let fileset;
+      try {
+        const wasmBase = new URL(/* @vite-ignore */ '../assets/vendor/mediapipe/wasm', import.meta.url).href;
+        fileset = await FilesetResolver.forVisionTasks(wasmBase);
+      } catch {
+        fileset = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm');
+      }
+
       const modelPath = new URL(/* @vite-ignore */ '../assets/models/hand_landmarker.task', import.meta.url).href;
-      const fileset = await FilesetResolver.forVisionTasks(wasmBase);
       const options = {
         baseOptions: { modelAssetPath: modelPath, delegate: 'GPU' },
         runningMode: 'VIDEO',
         numHands: 2,
-        minHandDetectionConfidence: this.sensitivity,
-        minHandPresenceConfidence: this.sensitivity,
-        minTrackingConfidence: this.sensitivity
+        minHandDetectionConfidence: 0.30,
+        minHandPresenceConfidence: 0.30,
+        minTrackingConfidence: 0.30
       };
+
       try {
         this.landmarker = await HandLandmarker.createFromOptions(fileset, options);
       } catch {
+        options.baseOptions.modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
         options.baseOptions.delegate = 'CPU';
         this.landmarker = await HandLandmarker.createFromOptions(fileset, options);
       }
@@ -184,7 +192,7 @@ export class HandController {
     if (!this.running) return;
     this.raf = requestAnimationFrame(() => this._loop());
     const now = performance.now();
-    if (now - this.lastFrame < 50) return; // ~20fps scan loop
+    if (now - this.lastFrame < 33) return; // ~30fps fast scan loop
     this.lastFrame = now;
     if (this.video.readyState < 2 || this.video.currentTime === this.lastVideoTime) return;
     this.lastVideoTime = this.video.currentTime;
@@ -195,7 +203,7 @@ export class HandController {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (!result.landmarks?.length) {
       this.prevCenter = null;
-      this.onStatus?.('active', 'Scan your hands in camera view');
+      this.onStatus?.('active', 'Show your hand to the camera');
       return;
     }
 
@@ -208,8 +216,8 @@ export class HandController {
     const gesture1 = this._classify(hand1);
     const gesture2 = hand2 ? this._classify(hand2) : null;
 
-    let statusText = `Hand 1: ${gesture1.label}`;
-    if (gesture2) statusText += ` | Hand 2: ${gesture2.label}`;
+    let statusText = `Hand 1 (${gesture1.fingerCount} Fingers): ${gesture1.label}`;
+    if (gesture2) statusText += ` | Hand 2 (${gesture2.fingerCount} Fingers): ${gesture2.label}`;
 
     this.onStatus?.('active', statusText);
     this.onGesture?.({ primary: gesture1, secondary: gesture2, handCount: result.landmarks.length, ...gesture1 });
@@ -220,20 +228,34 @@ export class HandController {
     this.ctx.lineWidth = 3;
     this.ctx.strokeStyle = color;
     this.ctx.shadowColor = color;
-    this.ctx.shadowBlur = 8;
+    this.ctx.shadowBlur = 10;
+
     HAND_CONNECTIONS.forEach(([a, b]) => {
       this.ctx.beginPath();
       this.ctx.moveTo(landmarks[a].x * w, landmarks[a].y * h);
       this.ctx.lineTo(landmarks[b].x * w, landmarks[b].y * h);
       this.ctx.stroke();
     });
+
+    const tips = [4, 8, 12, 16, 20];
+    const fingerNames = ['T', 'I', 'M', 'R', 'P'];
+
     landmarks.forEach((p, i) => {
+      const isTip = tips.includes(i);
       this.ctx.beginPath();
-      const r = i % 4 === 0 ? 5 : 3;
+      const r = isTip ? 7 : (i % 4 === 0 ? 5 : 3);
       this.ctx.arc(p.x * w, p.y * h, r, 0, Math.PI * 2);
-      this.ctx.fillStyle = i % 4 === 0 ? '#ffffff' : color;
+      this.ctx.fillStyle = isTip ? '#57e3a2' : (i % 4 === 0 ? '#ffffff' : color);
       this.ctx.fill();
+
+      if (isTip) {
+        this.ctx.font = 'bold 10px sans-serif';
+        this.ctx.fillStyle = '#ffffff';
+        const tipIdx = tips.indexOf(i);
+        this.ctx.fillText(fingerNames[tipIdx], p.x * w - 3, p.y * h - 10);
+      }
     });
+
     this.ctx.shadowBlur = 0;
   }
 
