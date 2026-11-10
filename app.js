@@ -354,7 +354,16 @@ function viewportHeader() {
   if (state.route === 'alloy') { eyebrow = 'THICKNESS COMPARISON'; title = `${alloyMaterials().materialA.name} vs ${alloyMaterials().materialB.name}`; }
   if (state.route === 'electro') { eyebrow = 'ELECTROMAGNETIC DEVICE'; title = currentDevice()?.name || 'Device'; }
   if (state.route === 'experiments') { eyebrow = `EXPERIMENT ${String(currentExperiment()?.number || 1).padStart(2, '0')}`; title = currentExperiment()?.title || 'Experiment'; }
-  return `<div class="viewport-header"><div><div class="eyebrow">${esc(eyebrow)}</div><h2 id="specimenTitle">${esc(title)}</h2></div><span class="live-badge">REAL-TIME 3D</span></div>`;
+  return `<div class="viewport-header">
+    <div>
+      <div class="eyebrow">${esc(eyebrow)}</div>
+      <h2 id="specimenTitle">${esc(title)}</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="ghost-btn small" id="viewBlueprintBtn">${icon('cube')} Blueprint & Parts</button>
+      <span class="live-badge">REAL-TIME 3D</span>
+    </div>
+  </div>`;
 }
 
 function sceneHud() {
@@ -1046,6 +1055,26 @@ function run1000Benchmark() {
 }
 
 function bindPageEvents() {
+  $('#viewBlueprintBtn')?.addEventListener('click', () => {
+    let item = currentMagnet();
+    if (state.route === 'electro') item = currentDevice();
+    else if (state.route === 'materials') item = currentMaterial();
+    else if (state.route === 'concepts') item = currentConcept();
+
+    const parts = item.partsList || ['Standard Laboratory Grade Specimen Component', 'Dielectric Assembly Mounting Frame'];
+    const guide = item.assemblyGuide || 'Assemble on non-magnetic workbench using insulating fasteners and protective gear.';
+    const sourcing = item.sourcingGuide || 'Specialty physics suppliers, McMaster-Carr, K&J Magnetics, Digikey.';
+
+    openInfo(`Component Blueprint & Parts List: ${item.name || item.title}`, `
+      <h3>${icon('cube')} Bill of Materials (BOM) & Component List</h3>
+      <ul>${parts.map(p => `<li><strong>${esc(p)}</strong></li>`).join('')}</ul>
+      <h3>${icon('settings')} Engineering Specifications & Assembly Guide</h3>
+      <p class="prose">${esc(guide)}</p>
+      <h3>${icon('download')} Parts Procurement & Sourcing Guide</h3>
+      <p class="prose">${esc(sourcing)}</p>
+    `);
+  });
+
   $('#materialSearch')?.addEventListener('input', debounce(e => { state.materialQuery = e.target.value; render(); const input = $('#materialSearch'); input?.focus(); input?.setSelectionRange(input.value.length, input.value.length); }, 250));
   $('#headingVoice')?.addEventListener('click', () => openAgent(true));
   $('#headingRefs')?.addEventListener('click', () => openInfo('Model assumptions & references', modelNotesHtml()));

@@ -445,6 +445,41 @@ export function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
+/**
+ * Bifilar Coil Energy Storage Model (Nikola Tesla Patent US512340).
+ * In a bifilar pancake coil, adjacent turns carry high potential difference V_turn,
+ * storing up to 100x higher capacitive energy E_c = 1/2*C*V^2 alongside inductive E_L = 1/2*L*I^2.
+ */
+export function bifilarCoilEnergy({ inductance, current, capacitance, voltage }) {
+  const L = nonNegative(inductance, 'inductance');
+  const I = finite(current, 'current');
+  const C = nonNegative(capacitance, 'capacitance');
+  const V = finite(voltage, 'voltage');
+
+  const eL = 0.5 * L * I * I;
+  const eC = 0.5 * C * V * V;
+  const eTotal = eL + eC;
+  return { inductiveJoules: eL, capacitiveJoules: eC, totalJoules: eTotal };
+}
+
+/** Magneto-Hydrodynamic (MHD) Lorentz Thruster Force F = I*L x B. */
+export function mhdThrusterForce({ current, length, field }) {
+  const I = finite(current, 'current');
+  const L = positive(length, 'length');
+  const B = finite(field, 'field');
+  const force = I * L * B;
+  return { forceN: force, pressurePa: force / (L * L) };
+}
+
+/** Halbach Cylinder Uniform Bore Field B_bore = Br * ln(R_outer / R_inner). */
+export function halbachCylinderBoreField({ remanence, outerRadius, innerRadius }) {
+  const br = finite(remanence, 'remanence');
+  const Ro = positive(outerRadius, 'outerRadius');
+  const Ri = positive(innerRadius, 'innerRadius');
+  if (Ri >= Ro) throw new RangeError('outerRadius must be greater than innerRadius');
+  return br * Math.log(Ro / Ri);
+}
+
 /** Model limitations, keyed by model. */
 export const MODEL_NOTES = {
   solenoid: 'Finite thin-winding air-core solenoid centre field. Ignores winding pitch, wire thickness, end effects beyond the exact on-axis formula, and any core material.',
