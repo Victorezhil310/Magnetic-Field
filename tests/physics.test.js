@@ -405,3 +405,26 @@ test('QUIZ_QUESTIONS and recommendMagnet operate cleanly', () => {
   assert.ok(recs.length > 0);
   assert.ok(recs[0].score >= 0);
 });
+
+import { blackHoleMagneticJet, gravitationalLensingAngle, cosmicScaleConverter } from '../modules/physics.js';
+import { getProfessorGuide } from '../modules/teacher.js';
+
+test('Astrophysics models, cosmic scale converter and professor guide operate cleanly', () => {
+  const jet = blackHoleMagneticJet({ massSolar: 10, spinParameter: 0.9, magneticField: 100 });
+  assert.ok(jet.jetPowerWatts > 0);
+  assert.ok(jet.horizonRadiusM > 0);
+
+  const lens = gravitationalLensingAngle({ massSolar: 1, impactParameterKm: 700000 });
+  assert.ok(lens.angleArcsec > 0);
+
+  const cosmic = cosmicScaleConverter(-35);
+  assert.equal(cosmic.exponent, -35);
+  assert.ok(cosmic.name.includes('Planck'));
+
+  const cosmicMax = cosmicScaleConverter(26);
+  assert.equal(cosmicMax.exponent, 26);
+  assert.ok(cosmicMax.name.includes('Multiverse'));
+
+  const prof = getProfessorGuide({ route: 'field', params: { polarity: 'repel', gap: 20 } });
+  assert.ok(typeof prof === 'string' && prof.includes('AI PROFESSOR MODE'));
+});

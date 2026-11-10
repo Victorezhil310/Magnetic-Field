@@ -1,5 +1,6 @@
 import { MAGNETS, MATERIALS, DEVICES, EXPERIMENTS, ENCYCLOPEDIA, REFERENCES, THICKNESSES, CONCEPT_PROJECTS, getConceptCombination } from './modules/data.js';
 import { CALCULATORS, QUIZ_QUESTIONS, recommendMagnet } from './modules/tools.js';
+import { getProfessorGuide } from './modules/teacher.js';
 import { firebaseManager } from './modules/firebase.js';
 import * as Physics from './modules/physics.js';
 import { MagneticScene } from './modules/scene.js';
@@ -54,6 +55,7 @@ const state = {
   wizardMaxTemp: 100,
   wizardMinBr: 1.0,
   wizardCorrosion: true,
+  cosmicExponent: -2,
   infoTab: 'overview',
   materialFilter: 'all',
   materialQuery: '',
@@ -398,6 +400,18 @@ function deviceStrip() {
 }
 
 function labWorkspace(strip = '') {
+  const profHtml = getProfessorGuide({
+    route: state.route,
+    magnet: currentMagnet(),
+    material: currentMaterial(),
+    device: currentDevice(),
+    experiment: currentExperiment(),
+    concept: currentConcept(),
+    params: state.params,
+    deviceParams: state.deviceParams,
+    alloy: alloyMaterials()
+  });
+
   return `<div class="workspace-grid">
     <section class="viewport-card">
       ${viewportHeader()}
@@ -409,7 +423,8 @@ function labWorkspace(strip = '') {
       <div class="control-body">${controlsForRoute()}</div>
       <div class="temp-status" id="tempStatus" hidden></div>
     </aside>
-  </div>`;
+  </div>
+  <div style="margin-top:20px">${profHtml}</div>`;
 }
 
 function magnetDetail() {
@@ -566,13 +581,30 @@ function renderTools() {
     corrosionRisk: state.wizardCorrosion
   }).slice(0, 4);
 
+  const scaleInfo = Physics.cosmicScaleConverter(state.cosmicExponent);
+
   return `<section class="page-heading">
     <div>
       <div class="eyebrow">PHYSICS & ENGINEERING CALCULATORS</div>
       <h1>Tools & <span class="accent">Calculators</span></h1>
-      <p>Interactive student physics calculators, magnet selection wizards, coil winder thermal tools, and shielding effectiveness estimators.</p>
+      <p>Interactive student physics calculators, magnet selection wizards, coil winder thermal tools, and cosmic powers of ten scale zoomer.</p>
     </div>
   </section>
+
+  <!-- Cosmic Powers of Ten Scale Zoomer -->
+  <article class="tool-card" style="margin-bottom:24px;background:linear-gradient(135deg,rgba(13,24,40,.9),rgba(8,16,28,.95));border-color:var(--cyan)">
+    <h3>${icon('spark')} Cosmic Powers of Ten Multiverse Scale Zoomer (${scaleInfo.size})</h3>
+    <p>Interactively zoom from Quantum Planck Foam ($10^{-35}\\text{ m}$) up to Cosmic Multiverse Filaments ($10^{+26}\\text{ m}$).</p>
+    <div style="margin:16px 0">
+      <div class="control-label"><label for="cosmicRange">Spatial Scale Exponent: <strong>10^(${scaleInfo.exponent}) meters</strong></label><output>${scaleInfo.size}</output></div>
+      <input type="range" id="cosmicRange" min="-35" max="26" step="1" value="${state.cosmicExponent}" style="width:100%" />
+    </div>
+    <div class="calc-result" style="background:rgba(5,10,18,.8);border-color:var(--line-bright)">
+      <h4 style="margin:0 0 6px;color:var(--cyan);font-family:var(--font-display)">${esc(scaleInfo.name)} (${scaleInfo.size})</h4>
+      <p style="margin:0 0 6px"><strong>Typical Magnetic Field B:</strong> <span style="color:var(--amber)">${esc(scaleInfo.B)}</span></p>
+      <p style="margin:0">${esc(scaleInfo.desc)}</p>
+    </div>
+  </article>
 
   <div class="tool-grid">
     ${CALCULATORS.map(calc => {
@@ -1073,6 +1105,11 @@ function bindPageEvents() {
       <h3>${icon('download')} Parts Procurement & Sourcing Guide</h3>
       <p class="prose">${esc(sourcing)}</p>
     `);
+  });
+
+  $('#cosmicRange')?.addEventListener('input', e => {
+    state.cosmicExponent = Number(e.target.value) || -2;
+    render();
   });
 
   $('#materialSearch')?.addEventListener('input', debounce(e => { state.materialQuery = e.target.value; render(); const input = $('#materialSearch'); input?.focus(); input?.setSelectionRange(input.value.length, input.value.length); }, 250));

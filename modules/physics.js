@@ -446,6 +446,65 @@ export function lerp(a, b, t) {
 }
 
 /**
+ * Supermassive Black Hole Blandford-Znajek Relativistic MHD Jet Power.
+ * P_BZ ~ (1/128) * omega_H^2 * B^2 * R_H^4 * c (Watts).
+ */
+export function blackHoleMagneticJet({ massSolar, spinParameter, magneticField }) {
+  const M = nonNegative(massSolar, 'massSolar') * 1.98847e30;
+  const a = clamp(finite(spinParameter, 'spinParameter'), 0, 0.999);
+  const B = nonNegative(magneticField, 'magneticField');
+
+  const G = 6.6743e-11, c = 299792458;
+  const Rg = (G * M) / (c * c);
+  const Rh = Rg * (1 + Math.sqrt(1 - a * a));
+  const omegaH = (a * c) / (2 * Rh);
+
+  const powerW = (1 / 128) * (omegaH * omegaH) * (B * B) * Math.pow(Rh, 4) * c;
+  const powerLuminosity = powerW / 3.828e26; // Solar luminosities
+
+  return { horizonRadiusM: Rh, jetPowerWatts: powerW, jetPowerSolarLuminosities: powerLuminosity };
+}
+
+/** General Relativity Gravitational Lensing Light Deflection Angle alpha = 4GM / (c^2 b). */
+export function gravitationalLensingAngle({ massSolar, impactParameterKm }) {
+  const M = nonNegative(massSolar, 'massSolar') * 1.98847e30;
+  const b = positive(impactParameterKm, 'impactParameterKm') * 1000;
+
+  const G = 6.6743e-11, c = 299792458;
+  const angleRad = (4 * G * M) / (c * c * b);
+  const angleArcsec = angleRad * 206264.806;
+
+  return { angleRad, angleArcsec };
+}
+
+/**
+ * Cosmic Multiverse Powers of Ten Scale Converter.
+ * Maps scale exponent (-35 to +26) to real physical distance, magnetic field, and phenomenon.
+ */
+export function cosmicScaleConverter(scaleExponent) {
+  const exp = clamp(Math.round(scaleExponent), -35, 26);
+  const meters = Math.pow(10, exp);
+
+  const scaleMap = [
+    { exp: -35, name: 'Planck Quantum Foam Scale', size: '10⁻³⁵ m', B: '10⁹ T (Fluctuating)', desc: 'Quantum foam, string geometry, and Planck-scale magnetic flux quantum fluctuations.' },
+    { exp: -18, name: 'Subatomic Quark Scale', size: '10⁻¹⁸ m', B: '10¹⁴ T', desc: 'Quark-gluon plasma and ultra-strong chromo-magnetic fields inside nucleons.' },
+    { exp: -15, name: 'Atomic Nucleus Scale', size: '10⁻¹⁵ m', B: '10¹² T', desc: 'Nuclear magnetic dipole moments and Zeeman nuclear spin splitting.' },
+    { exp: -10, name: 'Atomic Orbit Electron Scale', size: '10⁻¹⁰ m', B: '10 to 100 T', desc: 'Bohr atom electron orbital magnetic dipole moments and atomic Zeeman Effect.' },
+    { exp: -6, name: 'Microscopic Domain Scale', size: '10⁻⁶ m', B: '1.5 T', desc: 'Ferromagnetic Weiss domains, domain wall movement, and Barkhausen jumps.' },
+    { exp: -2, name: 'Laboratory Specimen Scale', size: '10⁻² m (cm)', B: '0.1 to 2 T', desc: 'N52 Neodymium magnets, electromagnets, Halbach arrays, and lab experiments.' },
+    { exp: 7, name: 'Earth Geomagnetic Scale', size: '10⁷ m (10,000 km)', B: '30 to 60 µT', desc: 'Earth geodynamo dipole shield, magnetosphere, and Van Allen radiation belts.' },
+    { exp: 9, name: 'Solar Stellar Scale', size: '10⁹ m (Sun)', B: '0.1 to 0.4 T', desc: 'Solar convective dynamo, sunspots, solar flares, and coronal mass ejections.' },
+    { exp: 4, name: 'Magnetar Neutron Star Scale', size: '10⁴ m (10 km)', B: '10¹¹ T (100 Billion Tesla)', desc: 'Ultra-dense neutron star magnetar with quantum electrodynamic vacuum birefringence.' },
+    { exp: 12, name: 'Supermassive Black Hole Scale', size: '10¹² m (10 AU)', B: '1 to 100 T', desc: 'Accretion disk magneto-rotational instability driving relativistic MHD plasma jets.' },
+    { exp: 21, name: 'Galactic Spiral Scale', size: '10²¹ m (Milky Way)', B: '10⁻⁹ T (1 nT)', desc: 'Interstellar galactic magnetic field guiding cosmic rays along spiral arms.' },
+    { exp: 26, name: 'Cosmic Multiverse Filament Scale', size: '10²⁶ m (Observable Universe)', B: '10⁻¹⁵ T (1 fT)', desc: 'Intergalactic cosmic filaments, primordial cosmic web magnetic fields, and Multiverse scale.' }
+  ];
+
+  const closest = scaleMap.reduce((prev, curr) => Math.abs(curr.exp - exp) < Math.abs(prev.exp - exp) ? curr : prev);
+  return { exponent: exp, distanceMeters: meters, ...closest };
+}
+
+/**
  * Bifilar Coil Energy Storage Model (Nikola Tesla Patent US512340).
  * In a bifilar pancake coil, adjacent turns carry high potential difference V_turn,
  * storing up to 100x higher capacitive energy E_c = 1/2*C*V^2 alongside inductive E_L = 1/2*L*I^2.

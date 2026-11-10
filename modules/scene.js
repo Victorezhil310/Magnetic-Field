@@ -745,6 +745,28 @@ export class MagneticScene {
       group.add(rotor);
       this.genRotor = rotor;
       group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'mhd-thruster') {
+      const channel = this._addPart(group, new THREE.Mesh(new THREE.BoxGeometry(7, 1.2, 1.8), new THREE.MeshPhysicalMaterial({ color: 0x8fc8e8, roughness: 0.1, transmission: 0.8, transparent: true, opacity: 0.4 })), [0, 0.8, 0]);
+      channel.position.y = 1.4; channel.userData.basePos = channel.position.clone();
+      const fluid = this._addPart(group, new THREE.Mesh(new THREE.BoxGeometry(6.9, 0.8, 1.4), glow(COLORS.cyan, 0.6)), [0, 0.8, 0]);
+      fluid.position.y = 1.4; fluid.userData.basePos = fluid.position.clone();
+      [-1, 1].forEach(side => {
+        const electro = this._addPart(group, new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.12, 1.5), metal(COLORS.copper, 0.2, 0.9)), [0, side * 0.4, 0]);
+        electro.position.set(0, 1.4 + side * 0.55, 0); electro.userData.basePos = electro.position.clone();
+      });
+      group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'bifilar-resonator') {
+      const base = this._addPart(group, new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 0.2, 48), metal(0x1a2636, 0.4, 0.8)), [0, -0.4, 0]);
+      base.position.y = 0.1; base.userData.basePos = base.position.clone();
+      const spiralPts = [];
+      for (let i = 0; i <= 360; i++) {
+        const t = i / 360, angle = t * Math.PI * 2 * 12;
+        const r = 0.3 + t * 2.2;
+        spiralPts.push(new THREE.Vector3(Math.cos(angle) * r, 0.25, Math.sin(angle) * r));
+      }
+      const spiral = this._addPart(group, new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(spiralPts), 360, 0.05, 8), metal(COLORS.copper, 0.25, 0.9)), [0, 0, 0]);
+      spiral.userData.basePos = spiral.position.clone();
+      group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
     } else {
       this._buildCoilInto(group, { length: p.length / 10 || 4, radius: (p.diameter / 20) || 0.9, turns: Math.min(40, Math.max(4, p.turns / 10)), core: p.core !== 'air' });
       if (shape === 'electromagnet') {
