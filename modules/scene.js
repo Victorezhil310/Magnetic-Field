@@ -785,6 +785,26 @@ export class MagneticScene {
         junction.position.set(side * 1.8, 1.8, 0); junction.userData.basePos = junction.position.clone();
       });
       group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'bldc-pma-generator') {
+      const rotorGroup = new THREE.Group();
+      rotorGroup.position.y = 1.8;
+      [-0.8, 0.8].forEach(z => {
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.2, 48), metal(0x3a4a58, 0.3, 0.9));
+        disc.rotation.x = Math.PI / 2; disc.position.z = z; rotorGroup.add(disc);
+      });
+      const stator = this._addPart(group, new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.25, 48), metal(COLORS.copper, 0.3, 0.85)), [0, 1, 0]);
+      stator.rotation.x = Math.PI / 2; stator.position.y = 1.8; stator.userData.basePos = stator.position.clone();
+      group.add(rotorGroup);
+      this.rotors.push(rotorGroup);
+      group.userData.poleAxis = new THREE.Vector3(0, 1, 0);
+    } else if (shape === 'linear-mass-driver') {
+      const barrel = this._addPart(group, new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 8.0, 32), new THREE.MeshPhysicalMaterial({ color: 0x8fc8e8, roughness: 0.1, transmission: 0.85, transparent: true, opacity: 0.4 })), [0, 0.8, 0]);
+      barrel.rotation.z = Math.PI / 2; barrel.position.y = 1.2; barrel.userData.basePos = barrel.position.clone();
+      for (let i = -3; i <= 3; i += 2) {
+        const coil = this._addPart(group, new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.22, 16, 32), metal(COLORS.copper, 0.3, 0.9)), [0, 0, 0]);
+        coil.rotation.y = Math.PI / 2; coil.position.set(i * 1.1, 1.2, 0);
+      }
+      group.userData.poleAxis = new THREE.Vector3(1, 0, 0);
     } else {
       this._buildCoilInto(group, { length: p.length / 10 || 4, radius: (p.diameter / 20) || 0.9, turns: Math.min(40, Math.max(4, p.turns / 10)), core: p.core !== 'air' });
       if (shape === 'electromagnet') {

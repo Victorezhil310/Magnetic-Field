@@ -446,6 +446,29 @@ export function lerp(a, b, t) {
 }
 
 /**
+ * Axial Flux Permanent Magnet Generator Power & Efficiency Model.
+ * Calculates peak EMF, output AC frequency, copper losses, and Lenz counter-torque.
+ */
+export function axialFluxGeneratorPower({ rpm, poles, remanenceBr, radiusM, turnsPerPhase, currentA }) {
+  const speed = nonNegative(rpm, 'rpm');
+  const p = positive(poles, 'poles');
+  const Br = nonNegative(remanenceBr, 'remanenceBr');
+  const R = positive(radiusM, 'radiusM');
+  const N = positive(turnsPerPhase, 'turnsPerPhase');
+  const I = nonNegative(currentA, 'currentA');
+
+  const frequency = (p * speed) / 120; // Hz
+  const fluxArea = Math.PI * R * R;
+  const peakFlux = Br * fluxArea;
+  const vPeak = 2 * Math.PI * frequency * N * peakFlux;
+  const vRms = vPeak / Math.SQRT2;
+  const powerWatts = 3 * vRms * I; // 3-Phase AC power output
+  const counterTorqueNm = (p * N * I * peakFlux) / (2 * Math.PI);
+
+  return { frequencyHz: frequency, vRms, powerWatts, counterTorqueNm };
+}
+
+/**
  * Supermassive Black Hole Blandford-Znajek Relativistic MHD Jet Power.
  * P_BZ ~ (1/128) * omega_H^2 * B^2 * R_H^4 * c (Watts).
  */

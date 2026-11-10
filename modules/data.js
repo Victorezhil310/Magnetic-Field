@@ -131,7 +131,9 @@ export const DEVICES = [
   { id: 'bifilar-resonator', name: 'Nikola Tesla Bifilar Resonator Coil', shape: 'copper-coil', description: 'Flat pancake bifilar coil with integrated high capacitance for wireless power transmission.', physics: 'Adjacent turns carry high voltage difference, storing up to 100x higher internal capacitive energy E_c = 1/2*C*V^2.', formula: 'E_total = 1/2*L*I^2 + 1/2*C*V^2', applications: ['Wireless Energy Grids', 'Resonant Induction Tanks'], defaults: { voltage: 36, current: 3, turns: 120, core: 'air', length: 10, diameter: 120, gap: 2 }, specs: ['Self-resonant flat pancake geometry', 'High energy density'], references: ['wiki-tesla'], partsList: ['AWG 18 Dual-Strand Enamel Wire', '120 mm Acrylic Base Plate', 'High Voltage RF Driver'], assemblyGuide: 'Connect end of Strand 1 to start of Strand 2 in series. Drive with high-frequency sine wave.', sourcingGuide: 'Custom Tesla coil builders, Lab Surplus' },
   { id: 'mhd-thruster', name: 'Magneto-Hydrodynamic (MHD) Thruster', shape: 'solenoid', description: 'Electromagnetic fluid thruster driving conductive fluid/plasma using cross-field Lorentz force F = I*L x B.', physics: 'Direct electrical current passed through fluid in an axial magnetic field generates continuous Lorentz thrust without moving parts.', formula: 'F_thrust = I * L * B', applications: ['Submarine silent propulsion', 'Plasma space thrusters', 'Liquid metal pumps'], defaults: { voltage: 24, current: 8, turns: 1, core: 'air', length: 100, diameter: 30, gap: 5 }, specs: ['No moving mechanical parts', 'Direct electromagnetic fluid propulsion'], references: ['hyper'], partsList: ['Pair of Copper Electrodes', 'Channel Glass/Polycarbonate Tube', 'N52 Neodymium Field Magnets', 'Saltwater or Liquid Metal conductive fluid'], assemblyGuide: 'Position electrodes perpendicular to magnetic field lines along fluid channel.', sourcingGuide: 'DIY Plasma Lab, Scientific Supply' },
   { id: 'tokamak-fusion-ring', name: 'Tokamak Toroidal Fusion Magnetic Cage', shape: 'solenoid', description: 'Toroidal superconducting magnetic cage for magnetic confinement fusion plasma.', physics: 'Helical magnetic field lines formed by toroidal and poloidal coils prevent 100M°C fusion plasma from touching reactor walls.', formula: 'B_toroidal = mu0 * N * I / (2 * pi * r); q = r * B_t / (R * B_p)', applications: ['ITER Confinement', 'Clean Nuclear Fusion Energy', 'Magneto-plasma Physics'], defaults: { voltage: 48, current: 15, turns: 500, core: 'air', length: 80, diameter: 100, gap: 2 }, specs: ['Superconducting magnetic bottle', '100 Million °C plasma confinement'], references: ['wiki-super'], partsList: ['REBCO High-Tc Superconducting Tape Coils', 'Inconel Vacuum Vessel', 'Cryogenic Liquid Helium Cooling Loop'], assemblyGuide: 'Wind D-shaped toroidal field coils symmetrically around central solenoid axis.', sourcingGuide: 'ITER Fusion Research, SuperPower Inc' },
-  { id: 'squid-quantum-sensor', name: 'SQUID Superconducting Quantum Magnetometer', shape: 'superconducting', description: 'Ultra-sensitive femto-Tesla magnetic field sensor using Josephson junction quantum interference.', physics: 'Quantized magnetic flux through a superconducting loop with Josephson junctions creates periodic quantum interference voltage modulation.', formula: 'Phi_0 = h / (2e) = 2.067 x 10^-15 Weber', applications: ['Magnetoencephalography (MEG Brain Scanning)', 'Geophysical Mineral Exploration', 'Gravitational Wave Detection'], defaults: { voltage: 5, current: 0.1, turns: 1, core: 'air', length: 20, diameter: 15, gap: 1 }, specs: ['Measures fields down to 10^-15 Tesla (fT)', 'Josephson junction quantum tunneling'], references: ['wiki-super'], partsList: ['Niobium Josephson Junctions', 'Cryogenic Liquid Helium Cryostat', 'Mu-Metal Shielded Enclosure'], assemblyGuide: 'Operate inside triple-layer Mu-Metal shield at 4.2 Kelvin.', sourcingGuide: 'Tristan Technologies, STAR Cryoelectronics' }
+  { id: 'squid-quantum-sensor', name: 'SQUID Superconducting Quantum Magnetometer', shape: 'superconducting', description: 'Ultra-sensitive femto-Tesla magnetic field sensor using Josephson junction quantum interference.', physics: 'Quantized magnetic flux through a superconducting loop with Josephson junctions creates periodic quantum interference voltage modulation.', formula: 'Phi_0 = h / (2e) = 2.067 x 10^-15 Weber', applications: ['Magnetoencephalography (MEG Brain Scanning)', 'Geophysical Mineral Exploration', 'Gravitational Wave Detection'], defaults: { voltage: 5, current: 0.1, turns: 1, core: 'air', length: 20, diameter: 15, gap: 1 }, specs: ['Measures fields down to 10^-15 Tesla (fT)', 'Josephson junction quantum tunneling'], references: ['wiki-super'], partsList: ['Niobium Josephson Junctions', 'Cryogenic Liquid Helium Cryostat', 'Mu-Metal Shielded Enclosure'], assemblyGuide: 'Operate inside triple-layer Mu-Metal shield at 4.2 Kelvin.', sourcingGuide: 'Tristan Technologies, STAR Cryoelectronics' },
+  { id: 'bldc-pma-generator', name: 'Axial Flux Permanent Magnet Alternator (PMA)', shape: 'motor', description: 'High-efficiency 98% axial flux Halbach array generator converting mechanical energy to 3-phase AC power.', physics: 'Rotating Halbach magnets past 3-phase copper coils induce sinusoidal EMF without core hysteresis losses.', formula: 'V_rms = (pi / sqrt(2)) * f * N * Phi; eta = P_out / P_in', applications: ['Wind Turbine Alternators', 'EV Direct-Drive Hub Motors', 'Hydroelectric Generators'], defaults: { voltage: 36, current: 10, turns: 240, core: 'air', length: 40, diameter: 140, gap: 2 }, specs: ['98% High Efficiency', 'Zero cogging torque air-core design'], references: ['hyper'], partsList: ['Dual Rotor Discs with 16x N52 Neodymium Wedges', '3-Phase Stator Coil Disc', 'High-Speed Bearing Shaft'], assemblyGuide: 'Align upper and lower rotor magnet disks in attraction before clamping stator.', sourcingGuide: 'WindyNation, Specialty PMA Generators' },
+  { id: 'linear-mass-driver', name: 'Solenoid Linear Pulse Mass Driver', shape: 'solenoid', description: 'Multi-stage pulsed electromagnetic solenoid accelerator launching ferromagnetic or conducting projectiles.', physics: 'Sequential coil energization creates a travelling magnetic wave that pulls the projectile forward via reluctance force.', formula: 'F_drive = 1/2 * I^2 * dL/dx', applications: ['Space Launch Assist', 'Impact Testing', 'Maglev Catapults'], defaults: { voltage: 48, current: 20, turns: 400, core: 'air', length: 160, diameter: 25, gap: 1 }, specs: ['Multi-stage optical pulse timing', 'Reluctance force acceleration'], references: ['hyper'], partsList: ['AWG 14 Heavy Magnet Wire Coils', 'Polycarbonate Barrel Tube', 'Fast IR Photogate Sensors', 'High-Current MOSFET/IGBT Drivers'], assemblyGuide: 'Space photogate sensors 5 mm before each coil stage to trigger discharging.', sourcingGuide: 'Coilgun Labs, Digikey, SparkFun' }
 ];
 
 export const EXPERIMENTS = [
@@ -224,6 +226,34 @@ export const CONCEPT_PROJECTS = [
     params: { strength: 100, fieldLines: true, heatmap: true },
     physicsExplanation: 'Quantized magnetic flux Phi_0 = h/(2e) through the superconducting loop creates macroscopic quantum interference, modulating tunnel current with extreme sensitivity.',
     formula: 'Delta_Phi = h / (2e) = 2.0678 x 10^-15 Wb'
+  },
+  {
+    id: 'concept-7',
+    number: 7,
+    title: 'Axial Flux Permanent Magnet Alternator (PMA 98% Efficiency)',
+    category: 'ENERGY & POWER',
+    summary: 'Dual-rotor Halbach array axial flux generator converting wind/hydro mechanical energy into 3-phase AC power.',
+    setup: 'Dual rotating N52 magnet discs sandwiching a 3-phase air-core copper stator disc.',
+    route: 'electro',
+    device: 'bldc-pma-generator',
+    deviceParams: { voltage: 36, current: 10, turns: 240, core: 'air', length: 40, diameter: 140, gap: 2 },
+    params: { strength: 160, fieldLines: true, heatmap: true },
+    physicsExplanation: 'Air-core stator eliminates core hysteresis iron losses. Faraday induction yields V_rms = (pi/sqrt(2))*f*N*Phi with 98% electrical conversion efficiency.',
+    formula: 'V_rms = 4.44 * f * N * Phi; P_out = 3 * V_rms * I; eta = 98%'
+  },
+  {
+    id: 'concept-8',
+    number: 8,
+    title: 'Multi-Stage Solenoid Pulse Mass Driver Accelerator',
+    category: 'PROPULSION & MOTORS',
+    summary: 'High-current pulsed reluctance solenoid catapult accelerating projectiles along a barrel.',
+    setup: 'Sequential solenoid stages fired synchronously by optical IR photogates.',
+    route: 'electro',
+    device: 'linear-mass-driver',
+    deviceParams: { voltage: 48, current: 20, turns: 400, core: 'air', length: 160, diameter: 25, gap: 1 },
+    params: { speed: 2.2, fieldLines: true, heatmap: true },
+    physicsExplanation: 'Reluctance force F = 1/2 * I^2 * dL/dx pulls the ferromagnetic projectile into the center of the energized coil before optical shut-off prevents back-drag.',
+    formula: 'F_reluctance = 1/2 * I^2 * (dL/dx); E_kinetic = 1/2 * m * v^2'
   }
 ];
 

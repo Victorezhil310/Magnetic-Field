@@ -408,8 +408,13 @@ test('QUIZ_QUESTIONS and recommendMagnet operate cleanly', () => {
 
 import { blackHoleMagneticJet, gravitationalLensingAngle, cosmicScaleConverter } from '../modules/physics.js';
 import { getProfessorGuide } from '../modules/teacher.js';
+import { axialFluxGeneratorPower } from '../modules/physics.js';
 
-test('Astrophysics models, cosmic scale converter and professor guide operate cleanly', () => {
+test('Astrophysics models, generator power and professor guide operate cleanly', () => {
+  const pma = axialFluxGeneratorPower({ rpm: 1200, poles: 16, remanenceBr: 1.48, radiusM: 0.1, turnsPerPhase: 200, currentA: 10 });
+  assert.ok(pma.powerWatts > 0);
+  assert.ok(pma.frequencyHz === 160);
+
   const jet = blackHoleMagneticJet({ massSolar: 10, spinParameter: 0.9, magneticField: 100 });
   assert.ok(jet.jetPowerWatts > 0);
   assert.ok(jet.horizonRadiusM > 0);
