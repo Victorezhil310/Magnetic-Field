@@ -143,7 +143,7 @@ export class HandController {
       const options = {
         baseOptions: { modelAssetPath: modelPath, delegate: 'GPU' },
         runningMode: 'VIDEO',
-        numHands: 1,
+        numHands: 2,
         minHandDetectionConfidence: this.sensitivity,
         minHandPresenceConfidence: this.sensitivity,
         minTrackingConfidence: this.sensitivity
@@ -155,7 +155,7 @@ export class HandController {
         this.landmarker = await HandLandmarker.createFromOptions(fileset, options);
       }
       this.running = true;
-      this.onStatus?.('active', 'Hand tracking active');
+      this.onStatus?.('active', 'Dual Hand Scanner Active');
       this._loop();
       return true;
     } catch (err) {
@@ -184,7 +184,7 @@ export class HandController {
     if (!this.running) return;
     this.raf = requestAnimationFrame(() => this._loop());
     const now = performance.now();
-    if (now - this.lastFrame < 66) return;
+    if (now - this.lastFrame < 50) return; // ~20fps scan loop
     this.lastFrame = now;
     if (this.video.readyState < 2 || this.video.currentTime === this.lastVideoTime) return;
     this.lastVideoTime = this.video.currentTime;
@@ -195,20 +195,32 @@ export class HandController {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (!result.landmarks?.length) {
       this.prevCenter = null;
-      this.onStatus?.('active', 'Show your hand to the camera');
+      this.onStatus?.('active', 'Scan your hands in camera view');
       return;
     }
-    const landmarks = result.landmarks[0];
-    this._draw(landmarks);
-    const gesture = this._classify(landmarks);
-    this.onStatus?.('active', gesture.label);
-    this.onGesture?.(gesture);
+
+    const hand1 = result.landmarks[0];
+    const hand2 = result.landmarks[1] || null;
+
+    this._draw(hand1, '#35e6ff');
+    if (hand2) this._draw(hand2, '#d96bff');
+
+    const gesture1 = this._classify(hand1);
+    const gesture2 = hand2 ? this._classify(hand2) : null;
+
+    let statusText = `Hand 1: ${gesture1.label}`;
+    if (gesture2) statusText += ` | Hand 2: ${gesture2.label}`;
+
+    this.onStatus?.('active', statusText);
+    this.onGesture?.({ primary: gesture1, secondary: gesture2, handCount: result.landmarks.length, ...gesture1 });
   }
 
-  _draw(landmarks) {
+  _draw(landmarks, color = '#35e6ff') {
     const w = this.canvas.width, h = this.canvas.height;
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = 'rgba(53,230,255,.8)';
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeStyle = color;
+    this.ctx.shadowColor = color;
+    this.ctx.shadowBlur = 8;
     HAND_CONNECTIONS.forEach(([a, b]) => {
       this.ctx.beginPath();
       this.ctx.moveTo(landmarks[a].x * w, landmarks[a].y * h);
@@ -217,10 +229,12 @@ export class HandController {
     });
     landmarks.forEach((p, i) => {
       this.ctx.beginPath();
-      this.ctx.arc(p.x * w, p.y * h, i % 4 === 0 ? 4 : 2.5, 0, Math.PI * 2);
-      this.ctx.fillStyle = i % 4 === 0 ? '#d96bff' : '#35e6ff';
+      const r = i % 4 === 0 ? 5 : 3;
+      this.ctx.arc(p.x * w, p.y * h, r, 0, Math.PI * 2);
+      this.ctx.fillStyle = i % 4 === 0 ? '#ffffff' : color;
       this.ctx.fill();
     });
+    this.ctx.shadowBlur = 0;
   }
 
   _dist(a, b) {

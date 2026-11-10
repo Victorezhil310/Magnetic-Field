@@ -368,6 +368,12 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ad-container{min-height:90px;display:flex;align-items:center;justify-content:center;background:rgba(10,18,30,.4);border-radius:6px}
 .ad-placeholder{font-size:10px;color:var(--cool);font-family:var(--font-mono)}
 
+/* Floating Quick Dock */
+.floating-quick-dock{position:absolute;top:60px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:20;background:rgba(10,18,30,.85);border:1px solid var(--line-bright);border-radius:12px;padding:6px;backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.quick-dock-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s ease}
+.quick-dock-btn:hover,.quick-dock-btn.active{border-color:var(--cyan);background:rgba(53,230,255,.18);color:var(--cyan);box-shadow:0 0 12px rgba(53,230,255,.3)}
+.quick-dock-btn [data-icon]{font-size:16px}
+
 /* Legal Links */
 .legal-links{margin:8px 0;font-size:10px;color:var(--cool)}
 .legal-links button{background:none;border:none;color:var(--cool);padding:0;font-size:10px;cursor:pointer;text-decoration:underline}

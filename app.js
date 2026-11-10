@@ -372,6 +372,17 @@ function sceneHud() {
   return `<div class="scene-hud">
     <div class="scene-chip"><i></i> PBR · STUDIO 01</div>
     <div class="scene-readout"><span>REMANENCE <strong id="hudBr">—</strong></span><span>GAP <strong id="hudGap">—</strong></span><span>MODE <strong id="hudMode">SOLID</strong></span></div>
+
+    <!-- Floating Quick Tools Action Dock -->
+    <div class="floating-quick-dock" aria-label="Quick Action Tools">
+      <button class="quick-dock-btn ${state.params.fieldLines ? 'active' : ''}" id="quickToggleField" title="Toggle Field Lines">${icon('field')}</button>
+      <button class="quick-dock-btn ${state.params.filings ? 'active' : ''}" id="quickToggleFilings" title="Toggle Iron Filings">${icon('grid')}</button>
+      <button class="quick-dock-btn ${state.params.heatmap ? 'active' : ''}" id="quickToggleHeatmap" title="Toggle Flux Heatmap">${icon('sun')}</button>
+      <button class="quick-dock-btn" id="quickToggleExplode" title="Toggle Exploded View">${icon('cube')}</button>
+      <button class="quick-dock-btn" id="quickCamHand" title="Toggle Camera Hand Control">${icon('hand')}</button>
+      <button class="quick-dock-btn" id="quickVoiceAgent" title="Toggle Voice Assistant">${icon('mic')}</button>
+    </div>
+
     <div class="scene-tools">
       <button class="icon-btn" id="pauseBtn" aria-label="${state.params.paused ? 'Resume' : 'Pause'} animation">${icon(state.params.paused ? 'play' : 'pause')}</button>
       <button class="icon-btn" id="fullscreenBtn" aria-label="Fullscreen viewport">${icon('expand')}</button>
@@ -1087,6 +1098,12 @@ function run1000Benchmark() {
 }
 
 function bindPageEvents() {
+  $('#quickToggleField')?.addEventListener('click', () => { setParam('fieldLines', !state.params.fieldLines); syncControls(); render(); });
+  $('#quickToggleFilings')?.addEventListener('click', () => { setParam('filings', !state.params.filings); syncControls(); render(); });
+  $('#quickToggleHeatmap')?.addEventListener('click', () => { setParam('heatmap', !state.params.heatmap); syncControls(); render(); });
+  $('#quickToggleExplode')?.addEventListener('click', () => { setParam('displayMode', state.params.displayMode === 'exploded' ? 'solid' : 'exploded'); syncControls(); render(); });
+  $('#quickCamHand')?.addEventListener('click', () => { $('#gestureBtn')?.click(); });
+  $('#quickVoiceAgent')?.addEventListener('click', () => { $('#voiceBtn')?.click(); });
   $('#viewBlueprintBtn')?.addEventListener('click', () => {
     let item = currentMagnet();
     if (state.route === 'electro') item = currentDevice();
